@@ -3,6 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 import openai
 import re
+import json
+from datetime import date
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
@@ -38,8 +40,12 @@ def generate_ai_content(keyword, competitor_texts):
     Write a detailed SEO blog post for the keyword: {keyword}.
     Use the following competitor content as reference:
     {competitor_texts}
-    Make it original, locally relevant for Buffalo, New York, and include FAQs.
+    Make it original, locally relevant for Buffalo, New York, and include 3 FAQs.
     Include HTML formatting and headings (h1, h2, etc).
+    Output:
+    - Meta title and description
+    - SEO-friendly HTML
+    - Schema markup for FAQ and LegalService (as JSON-LD)
     """
     response = openai.ChatCompletion.create(
         model="gpt-4",
@@ -47,6 +53,31 @@ def generate_ai_content(keyword, competitor_texts):
         temperature=0.7
     )
     return response.choices[0].message.content
+
+def extract_faq_schema(faq_html):
+    # Optional: You can parse real FAQ from generated content
+    return {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "What should I do after a truck accident in Buffalo?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Seek medical attention, document the scene, and contact a trucking attorney."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Who is liable in a Buffalo trucking accident?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Liability can fall on the driver, the trucking company, or even parts manufacturers."
+                }
+            }
+        ]
+    }
 
 st.title("🚀 AI SEO Blog Generator for Lawyers")
 
@@ -58,10 +89,22 @@ if st.button("Generate Blog Post"):
         competitor_text = ""
         for url in urls:
             competitor_text += extract_text_from_url(url)[:3000]
-        ai_blog = generate_ai_content(keyword, competitor_text)
 
-        st.subheader("📝 AI-Generated Blog Post")
+        ai_blog = generate_ai_content(keyword, competitor_text)
+        faq_schema = extract_faq_schema(ai_blog)
+
+        st.subheader("📝 AI-Generated SEO Blog Post")
         st.code(ai_blog, language='html')
+
+        st.subheader("📦 Schema Markup (FAQ)")
+        st.code(json.dumps(faq_schema, indent=2), language='json')
+
+        st.download_button(
+            label="📥 Download Blog Post HTML",
+            data=ai_blog,
+            file_name=f"{keyword.replace(' ', '_')}_blog_{date.today()}.html",
+            mime="text/html"
+        )
 
         st.markdown("---")
         st.write("Top Competitor URLs:")
