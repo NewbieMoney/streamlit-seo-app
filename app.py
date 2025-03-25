@@ -1,12 +1,14 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import openai
+from openai import OpenAI
 import re
 import json
 from datetime import date
 
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Set up OpenAI client
+client = OpenAI()
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 def scrape_top_results(query, num_results=3):
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -47,7 +49,7 @@ def generate_ai_content(keyword, competitor_texts):
     - SEO-friendly HTML
     - Schema markup for FAQ and LegalService (as JSON-LD)
     """
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7
@@ -55,7 +57,6 @@ def generate_ai_content(keyword, competitor_texts):
     return response.choices[0].message.content
 
 def extract_faq_schema(faq_html):
-    # Optional: You can parse real FAQ from generated content
     return {
         "@context": "https://schema.org",
         "@type": "FAQPage",
@@ -79,6 +80,7 @@ def extract_faq_schema(faq_html):
         ]
     }
 
+# --- Streamlit Interface ---
 st.title("🚀 AI SEO Blog Generator for Lawyers")
 
 keyword = st.text_input("Enter your target keyword:", "Buffalo trucking attorney")
