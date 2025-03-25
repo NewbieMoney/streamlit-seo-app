@@ -6,9 +6,9 @@ import re
 import json
 from datetime import date
 
-# Set up OpenAI client
-client = OpenAI()
+# Load OpenAI key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=openai_api_key)
 
 def scrape_top_results(query, num_results=3):
     headers = {"User-Agent": "Mozilla/5.0"}
