@@ -50,7 +50,7 @@ def generate_ai_content(keyword, competitor_texts):
     - Schema markup for FAQ and LegalService (as JSON-LD)
     """
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7
     )
